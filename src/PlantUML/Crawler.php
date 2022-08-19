@@ -31,7 +31,7 @@ final class Crawler
     /**
      * @var array<\PhpParser\Node\Stmt>
      */
-    protected ?array $ast = null;
+    protected array $ast = [];
 
     protected Node $node;
 
@@ -49,7 +49,7 @@ final class Crawler
 
     public function getNode(): Node
     {
-        if ($this->ast === null) {
+        if (empty($this->ast)) {
             $this->parse();
         }
 
@@ -58,7 +58,7 @@ final class Crawler
 
     public function getAst(): string
     {
-        if ($this->ast === null) {
+        if (empty($this->ast)) {
             $this->parse();
         }
 

@@ -32,4 +32,14 @@ class PlantUMLTest extends TestCase
         self::assertSame('strict_types', $node->getDeclare()->getDeclarations()[0]->getName());
         self::assertSame(1, $node->getDeclare()->getDeclarations()[0]->getValue());
     }
+
+    public function testGetNamespace(): void
+    {
+        $plantUML = new PlantUML(__DIR__ . '/example/class.php');
+        $node = $plantUML->accessNode();
+        self::assertSame('PhpPlantUML\PlantUML', $node->getNamespace()->toString());
+        self::assertIsArray($node->getNamespace()->getUses());
+        self::assertCount(1, $node->getNamespace()->getUses());
+        self::assertSame('PhpParser\Node\Stmt\Namespace_', $node->getNamespace()->getUses()[0]->toString());
+    }
 }

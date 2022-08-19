@@ -42,7 +42,7 @@ final class PlantUML
 
     public function getPlantUml(): string
     {
-        // To be implemented
+        return 'To be implemented!';
     }
 
     public function accessNode(): Node
@@ -59,7 +59,7 @@ final class PlantUML
     {
         return sprintf(
             '%s_%s',
-            $this->crawler->getNode()->getNamespace()->getSafeNamespace(),
+            $this->crawler->getNode()->getNamespace()->toSafeString(),
             '-',
         );
     }

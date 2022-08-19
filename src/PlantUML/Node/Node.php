@@ -16,7 +16,6 @@ declare(strict_types=1);
 namespace PhpPlantUML\PlantUML\Node;
 
 use PhpParser\Node\Stmt;
-use PhpParser\Node\Stmt\Namespace_;
 
 final class Node
 {
@@ -29,18 +28,41 @@ final class Node
      */
     public function __construct(array $nodes)
     {
+        $this->walk($nodes);
+    }
+
+    /**
+     * @param array<\PhpParser\Node\Stmt> $nodes
+     */
+    protected function walk(array $nodes): void
+    {
         foreach ($nodes as $node) {
-            switch ($node::class) {
-                case Namespace_::class:
-                    $this->namespace = new NamespaceNode($node);
+            $this->assign($node);
+        }
+    }
 
-                    break;
+    protected function assign(Stmt $node): void
+    {
+        switch ($node::class) {
+            case Stmt\Namespace_::class:
+                $this->namespace = new NamespaceNode($node->name->parts ?? []);
+                $this->walk($node->stmts);
+                break;
 
-                case Stmt\Declare_::class:
-                    $this->declare = new DeclareNode($node);
+            case Stmt\Declare_::class:
+                $this->declare = new DeclareNode($node);
+                break;
 
-                    break;
-            }
+            case Stmt\Use_::class:
+                $this->walk($node->uses);
+                break;
+
+            case Stmt\UseUse::class:
+                $this->namespace->addUse($node->name->parts);
+                break;
+
+            default:
+                break;
         }
     }
 

@@ -15,9 +15,12 @@ declare(strict_types=1);
 
 namespace PhpPlantUML\PlantUML\Node;
 
+use PhpParser\Node\Scalar\LNumber;
+use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Declare_;
 use PhpParser\Node\Stmt\DeclareDeclare;
 use PhpPlantUML\PlantUML\Node\Item\DeclareItem;
+
 use function assert;
 
 final class DeclareNode
@@ -29,9 +32,11 @@ final class DeclareNode
 
     public function __construct(Declare_ $node)
     {
-        foreach($node->declares as $declare) {
+        foreach ($node->declares as $declare) {
             assert($declare instanceof DeclareDeclare);
-            $this->declarations[] = new DeclareItem($declare->key->toString(), $declare->value->value);
+            if ($declare->value instanceof LNumber || $declare->value instanceof String_) {
+                $this->declarations[] = new DeclareItem($declare->key->toString(), $declare->value->value);
+            }
         }
     }
 

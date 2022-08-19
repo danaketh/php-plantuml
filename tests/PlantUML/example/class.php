@@ -13,28 +13,37 @@ declare(strict_types=1);
 
 namespace PhpPlantUML\PlantUML;
 
+use PhpParser\Node\Stmt\Namespace_;
+
 class ExampleClass
 {
     public const CONSTANT = 'constant';
 
     public string $property = 'property';
 
+    public string $publicProperty = 'publicProperty';
+
     protected string $protectedProperty = 'protectedProperty';
 
     private string $privateProperty = 'privateProperty';
 
-    public function publicMethod(): void
+    public function publicMethod(): string
     {
-        echo 'publicMethod';
+        return 'publicMethod';
     }
 
-    protected function protectedMethod(): void
+    public function getNamespaceClass(): string
     {
-        echo 'protectedMethod';
+        return Namespace_::class;
     }
 
-    private function privateMethod(): void
+    protected function protectedMethod(): string
     {
-        echo 'privateMethod';
+        return 'protectedMethod';
+    }
+
+    private function privateMethod(): string
+    {
+        return 'privateMethod';
     }
 }

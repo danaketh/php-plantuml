@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 namespace PhpPlantUML\PlantUML\Node;
 
-use PhpParser\Node\Stmt\Namespace_;
+use PhpParser\Node\Stmt;
 
 final class NamespaceNode
 {
@@ -24,18 +24,42 @@ final class NamespaceNode
      */
     protected array $parts;
 
-    public function __construct(Namespace_ $node)
+    /**
+     * @var array<NamespaceNode>
+     */
+    protected array $uses = [];
+
+    /**
+     * @param string[] $parts
+     */
+    public function __construct(array $parts)
     {
-        $this->parts = $node->name->parts ?? [];
+        $this->parts = $parts;
     }
 
-    public function getNamespace(): string
+    public function toString(): string
     {
         return implode('\\', $this->parts);
     }
 
-    public function getSafeNamespace(): string
+    public function toSafeString(): string
     {
-        return str_replace('\\', '_', $this->getNamespace());
+        return str_replace('\\', '_', $this->toString());
+    }
+
+    /**
+     * @param string[] $parts
+     */
+    public function addUse(array $parts): void
+    {
+        $this->uses[] = new NamespaceNode($parts);
+    }
+
+    /**
+     * @return NamespaceNode[]
+     */
+    public function getUses(): array
+    {
+        return $this->uses;
     }
 }
