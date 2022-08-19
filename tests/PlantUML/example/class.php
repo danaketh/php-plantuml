@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace PhpPlantUML\PlantUML;
 
 use PhpParser\Node\Stmt\Namespace_;
+use PhpParser\Node\Stmt\Class_;
 
 class ExampleClass
 {
@@ -32,9 +33,14 @@ class ExampleClass
         return 'publicMethod';
     }
 
-    public function getNamespaceClass(): string
+    public function getNamespaceUse(): string
     {
         return Namespace_::class;
+    }
+
+    public function getClassUse(): string
+    {
+        return Class_::class;
     }
 
     protected function protectedMethod(): string

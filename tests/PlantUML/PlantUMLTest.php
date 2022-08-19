@@ -39,7 +39,7 @@ class PlantUMLTest extends TestCase
         $node = $plantUML->accessNode();
         self::assertSame('PhpPlantUML\PlantUML', $node->getNamespace()->toString());
         self::assertIsArray($node->getNamespace()->getUses());
-        self::assertCount(1, $node->getNamespace()->getUses());
+        self::assertCount(2, $node->getNamespace()->getUses());
         self::assertSame('PhpParser\Node\Stmt\Namespace_', $node->getNamespace()->getUses()[0]->toString());
     }
 }
