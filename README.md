@@ -1,16 +1,16 @@
 # PHP PlantUML Generator
 Takes you PHP code and generates PlantUML diagrams from it.
 
-# Requirements
+## Requirements
 * PHP 8.0+
 * Composer
 
-# Installation
+## Installation
 ```bash
 composer require danaketh/php-plantuml
 ```
 
-# Usage
+## Usage
 ```bash
 vendor/bin/php-plantuml <project-directory> <output-directory>
 ```
