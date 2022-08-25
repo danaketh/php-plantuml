@@ -23,12 +23,29 @@ final class Node
 
     protected DeclareNode $declare;
 
+    protected ClassNode $class;
+
     /**
      * @param array<\PhpParser\Node\Stmt> $nodes
      */
     public function __construct(array $nodes)
     {
         $this->walk($nodes);
+    }
+
+    public function getDeclare(): DeclareNode
+    {
+        return $this->declare;
+    }
+
+    public function getNamespace(): NamespaceNode
+    {
+        return $this->namespace;
+    }
+
+    public function getClass(): ClassNode
+    {
+        return $this->class;
     }
 
     /**
@@ -45,34 +62,33 @@ final class Node
     {
         switch ($node::class) {
             case Stmt\Namespace_::class:
-                $this->namespace = new NamespaceNode($node->name->parts ?? []);
+                $this->namespace = new NamespaceNode($node);
                 $this->walk($node->stmts);
+
                 break;
 
             case Stmt\Declare_::class:
                 $this->declare = new DeclareNode($node);
+
                 break;
 
             case Stmt\Use_::class:
                 $this->walk($node->uses);
+
                 break;
 
             case Stmt\UseUse::class:
-                $this->namespace->addUse($node->name->parts);
+                $this->namespace->addUse($node);
+
+                break;
+
+            case Stmt\Class_::class:
+                $this->class = new ClassNode($node, $this->namespace);
+
                 break;
 
             default:
                 break;
         }
-    }
-
-    public function getDeclare(): DeclareNode
-    {
-        return $this->declare;
-    }
-
-    public function getNamespace(): NamespaceNode
-    {
-        return $this->namespace;
     }
 }

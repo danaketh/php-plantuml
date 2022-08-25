@@ -15,7 +15,9 @@ declare(strict_types=1);
 
 namespace PhpPlantUML\PlantUML\Node;
 
+use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
+use function assert;
 
 final class NamespaceNode
 {
@@ -25,16 +27,17 @@ final class NamespaceNode
     protected array $parts;
 
     /**
-     * @var array<NamespaceNode>
+     * @var array<\PhpPlantUML\PlantUML\Node\NamespaceNode>
      */
     protected array $uses = [];
 
-    /**
-     * @param string[] $parts
-     */
-    public function __construct(array $parts)
+    protected ?string $alias = null;
+
+    public function __construct(Stmt\Namespace_|Stmt\UseUse $node)
     {
-        $this->parts = $parts;
+        assert($node->name instanceof Name);
+        $this->parts = $node->name->parts;
+        $this->alias = $node->name->getAttribute('alias');
     }
 
     public function toString(): string
@@ -47,19 +50,32 @@ final class NamespaceNode
         return str_replace('\\', '_', $this->toString());
     }
 
-    /**
-     * @param string[] $parts
-     */
-    public function addUse(array $parts): void
+    public function addUse(Stmt\UseUse $node): void
     {
-        $this->uses[] = new NamespaceNode($parts);
+        $this->uses[] = new NamespaceNode($node);
+    }
+
+    public function getAlias(): ?string
+    {
+        return $this->alias;
     }
 
     /**
-     * @return NamespaceNode[]
+     * @return array<\PhpPlantUML\PlantUML\Node\NamespaceNode>
      */
     public function getUses(): array
     {
         return $this->uses;
+    }
+
+    public function findUse(string $name): ?NamespaceNode
+    {
+        foreach ($this->uses as $use) {
+            if ($this->getAlias() === $name || str_ends_with($use->toString(), $name)) {
+                return $use;
+            }
+        }
+
+        return null;
     }
 }

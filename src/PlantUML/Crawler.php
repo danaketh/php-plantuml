@@ -49,7 +49,7 @@ final class Crawler
 
     public function getNode(): Node
     {
-        if (empty($this->ast)) {
+        if (count($this->ast) === 0) {
             $this->parse();
         }
 
@@ -58,7 +58,7 @@ final class Crawler
 
     public function getAst(): string
     {
-        if (empty($this->ast)) {
+        if (count($this->ast) === 0) {
             $this->parse();
         }
 

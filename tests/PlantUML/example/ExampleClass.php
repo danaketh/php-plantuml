@@ -15,8 +15,9 @@ namespace PhpPlantUML\PlantUML;
 
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Class_;
+use PhpPlantUML\PlantUML\ns\AnotherExampleClass;
 
-class ExampleClass
+final class ExampleClass extends AnotherExampleClass
 {
     public const CONSTANT = 'constant';
 
