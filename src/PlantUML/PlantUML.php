@@ -15,52 +15,68 @@ declare(strict_types=1);
 
 namespace PhpPlantUML\PlantUML;
 
-use PhpPlantUML\PlantUML\Node\Node;
+use Generator;
+use Iterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RecursiveRegexIterator;
+use RegexIterator;
+use SplFileInfo;
 
 final class PlantUML
 {
-    protected Crawler $crawler;
+    /**
+     * @var array<\SplFileInfo>
+     */
+    protected array $files = [];
 
-    public function __construct(string $fileName)
+    /**
+     * @var array<\PhpPlantUML\PlantUML\Crawler>
+     */
+    protected array $crawlers= [];
+
+    public function __construct(string $path)
     {
-        $this->crawler = new Crawler($fileName);
+        $this->findFiles($path);
     }
 
-    public function setBasePath(string $basePath): self
+    public function crawl(): void
     {
-        $this
-            ->crawler
-            ->setBasePath($basePath);
-
-        return $this;
+        foreach ($this->files as $file) {
+            $this->crawlers[] = new Crawler($file);
+        }
     }
 
-    public function getAst(): string
+    /** @return array<\PhpPlantUML\PlantUML\Crawler> */
+    public function getCrawlers(): array
     {
-        return $this->crawler->getAst();
+        return $this->crawlers;
     }
 
-    public function getPlantUml(): string
+    public function getModels(): Generator
     {
-        return 'To be implemented!';
+        foreach ($this->crawlers as $crawler) {
+            yield $crawler->getModel();
+        }
     }
 
-    public function accessNode(): Node
+    public function getAsts(): Iterator
     {
-        return $this->crawler->getNode();
+        foreach ($this->crawlers as $crawler) {
+            yield $crawler->getAst();
+        }
     }
 
-    public function createAstFileName(): string
+    protected function findFiles(string $path): void
     {
-        return sprintf('%s.ast', $this->createFileName());
-    }
-
-    public function createFileName(): string
-    {
-        return sprintf(
-            '%s_%s',
-            $this->crawler->getNode()->getNamespace()->toSafeString(),
-            '-',
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST,
         );
+        $regexIterator = new RegexIterator($iterator, '/^.+\.php$/i', RecursiveRegexIterator::GET_MATCH);
+
+        foreach ($regexIterator as $file) {
+            $this->files[] = new SplFileInfo($file[0]);
+        }
     }
 }

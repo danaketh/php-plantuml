@@ -13,8 +13,6 @@ declare(strict_types=1);
 
 namespace PhpPlantUML\PlantUML\ns;
 
-use PhpParser\Node\Stmt\Namespace_;
-use PhpParser\Node\Stmt\Class_;
 use PhpPlantUML\PlantUML\ExampleAbstractClass;
 
 abstract class AnotherExampleClass extends ExampleAbstractClass

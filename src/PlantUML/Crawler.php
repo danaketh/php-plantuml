@@ -15,17 +15,20 @@ declare(strict_types=1);
 
 namespace PhpPlantUML\PlantUML;
 
+use PhpParser\Node\Stmt;
 use PhpParser\NodeDumper;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
 use PhpPlantUML\PlantUML\Exception\UnableToParseFile;
-use PhpPlantUML\PlantUML\Exception\UnableToReadFile;
-use PhpPlantUML\PlantUML\Node\Node;
+use PhpPlantUML\PlantUML\Factory\ClassModelFactory;
+use PhpPlantUML\PlantUML\Factory\InterfaceModelFactory;
+use PhpPlantUML\PlantUML\Factory\TraitModelFactory;
+use PhpPlantUML\PlantUML\Model\Model;
+use SplFileInfo;
+use SplFileObject;
 
 final class Crawler
 {
-    protected string $basePath;
-
     protected Parser $parser;
 
     /**
@@ -33,27 +36,20 @@ final class Crawler
      */
     protected array $ast = [];
 
-    protected Node $node;
+    protected Model $model;
 
-    public function __construct(protected string $fileName)
+    public function __construct(protected SplFileInfo $file)
     {
         $this->parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
     }
 
-    public function setBasePath(string $basePath): self
-    {
-        $this->basePath = $basePath;
-
-        return $this;
-    }
-
-    public function getNode(): Node
+    public function getModel(): Model
     {
         if (count($this->ast) === 0) {
             $this->parse();
         }
 
-        return $this->node;
+        return $this->model;
     }
 
     public function getAst(): string
@@ -67,21 +63,48 @@ final class Crawler
 
     protected function parse(): self
     {
-        $buffer = file_get_contents($this->fileName);
-
-        if (!$buffer) {
-            throw new UnableToReadFile($this->fileName);
-        }
-
-        $arr = $this->parser->parse($buffer);
+        $fileObj = $this->file->openFile('r');
+        assert($fileObj instanceof SplFileObject);
+        $code = $fileObj->fread($fileObj->getSize());
+        assert($code !== false);
+        $arr = $this->parser->parse($code);
 
         if (!is_array($arr)) {
-            throw new UnableToParseFile($this->fileName);
+            throw new UnableToParseFile($fileObj->getFilename());
         }
 
         $this->ast = $arr;
-        $this->node = new Node($this->ast);
+        $ns = $arr[1];
+        assert($ns instanceof Stmt\Namespace_);
+
+        foreach ($ns->stmts as $stmt) {
+            $this->resolveModel($stmt, $arr);
+        }
 
         return $this;
+    }
+
+    /** @param array<\PhpParser\Node\Stmt> $stmts */
+    protected function resolveModel(Stmt $stmt, array $stmts): void
+    {
+        switch ($stmt) {
+            case $stmt instanceof Stmt\Class_:
+                $this->model = ClassModelFactory::create($stmts);
+
+                break;
+
+            case $stmt instanceof Stmt\Interface_:
+                $this->model = InterfaceModelFactory::create($stmts);
+
+                break;
+
+            case $stmt instanceof Stmt\Trait_:
+                $this->model = TraitModelFactory::create($stmts);
+
+                break;
+
+            default:
+                break;
+        }
     }
 }

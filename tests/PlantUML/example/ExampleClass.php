@@ -19,7 +19,11 @@ use PhpPlantUML\PlantUML\ns\AnotherExampleClass;
 
 final class ExampleClass extends AnotherExampleClass
 {
-    public const CONSTANT = 'constant';
+    public const PUBLIC_CONSTANT = 'constant';
+
+    protected const PROTECTED_CONSTANT = 'protected constant';
+
+    private const PRIVATE_CONSTANT = 'private constant';
 
     public string $property = 'property';
 
@@ -29,7 +33,7 @@ final class ExampleClass extends AnotherExampleClass
 
     private string $privateProperty = 'privateProperty';
 
-    public function publicMethod(): string
+    public function publicMethod(string $param1, int $param2): string|null
     {
         return 'publicMethod';
     }

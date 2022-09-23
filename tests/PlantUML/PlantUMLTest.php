@@ -12,7 +12,8 @@
 
 namespace PhpPlantUML\PlantUML;
 
-use PhpPlantUML\PlantUML\Node\NamespaceNode;
+use PhpPlantUML\PlantUML\Model\Model;
+use PhpPlantUML\PlantUML\ns\AnotherExampleClass;
 use PHPUnit\Framework\TestCase;
 
 class PlantUMLTest extends TestCase
@@ -21,51 +22,158 @@ class PlantUMLTest extends TestCase
 
     public function setUp(): void
     {
-        $this->plantUML = new PlantUML(__DIR__.'/example/ExampleClass.php');
-        file_put_contents('class.ast', $this->plantUML->getAst());
+        $this->plantUML = new PlantUML(__DIR__.'/example');
+        $this->plantUML->crawl();
+    }
+
+    public function testGetNodes(): void
+    {
+        $i = 0;
+
+        foreach ($this->plantUML->getModels() as $model) {
+            self::assertInstanceOf(Model::class, $model);
+            $i++;
+        }
+
+        self::assertEquals(5, $i);
     }
 
     public function testGetAst(): void
     {
-        self::assertIsString($this->plantUML->getAst());
+        foreach ($this->plantUML->getAsts() as $ast) {
+            self::assertIsString($ast);
+        }
     }
 
     public function testGetDeclare(): void
     {
-        $node = $this->plantUML->accessNode();
-        self::assertIsArray($node->getDeclare()->getDeclarations());
-        self::assertCount(1, $node->getDeclare()->getDeclarations());
-        self::assertSame('strict_types', $node->getDeclare()->getDeclarations()[0]->getName());
-        self::assertSame(1, $node->getDeclare()->getDeclarations()[0]->getValue());
+        foreach ($this->plantUML->getModels() as $model) {
+            self::assertSame(1, $model->getDeclare()->count());
+            self::assertSame(1, $model->getDeclare()->find('strict_types')->getValue());
+        }
+    }
+
+    public function testGetName(): void
+    {
+        $names = [
+            'AnotherExampleClass',
+            'ExampleAbstractClass',
+            'ExampleClass',
+            'ExampleInterface',
+            'ExampleTrait',
+        ];
+        $fqns = [
+            AnotherExampleClass::class,
+            ExampleAbstractClass::class,
+            ExampleClass::class,
+            ExampleInterface::class,
+            ExampleTrait::class,
+        ];
+        $safeFqns = [
+            'PhpPlantUML_PlantUML_ns_AnotherExampleClass',
+            'PhpPlantUML_PlantUML_ExampleAbstractClass',
+            'PhpPlantUML_PlantUML_ExampleClass',
+            'PhpPlantUML_PlantUML_ExampleInterface',
+            'PhpPlantUML_PlantUML_ExampleTrait',
+        ];
+
+        foreach ($this->plantUML->getModels() as $model) {
+            self::assertContains($model->getName(), $names);
+            self::assertContains($model->getFqn(), $fqns);
+            self::assertContains($model->getSafeFqn(), $safeFqns);
+        }
     }
 
     public function testGetNamespace(): void
     {
-        $node = $this->plantUML->accessNode();
-        self::assertSame('PhpPlantUML\PlantUML', $node->getNamespace()->toString());
-        self::assertIsArray($node->getNamespace()->getUses());
-        self::assertCount(3, $node->getNamespace()->getUses());
-        self::assertSame('PhpParser\Node\Stmt\Namespace_', $node->getNamespace()->getUses()[0]->toString());
+        foreach ($this->plantUML->getModels() as $model) {
+            if ($model->getName() === 'AnotherExampleClass') {
+                self::assertSame('PhpPlantUML\PlantUML\ns', $model->getNamespace()->toString());
+                self::assertSame('PhpPlantUML_PlantUML_ns', $model->getNamespace()->toSafeString());
+            } else {
+                self::assertSame('PhpPlantUML\PlantUML', $model->getNamespace()->toString());
+                self::assertSame('PhpPlantUML_PlantUML', $model->getNamespace()->toSafeString());
+            }
+        }
     }
 
-    public function testGetClass(): void
+    public function testGetUsedClasses(): void
     {
-        $node = $this->plantUML->accessNode();
-        self::assertSame('ExampleClass', $node->getClass()->getName());
+        foreach ($this->plantUML->getModels() as $model) {
+            if ($model->getName() === 'AnotherExampleClass') {
+                self::assertSame(1, $model->getUsedClasses()->count());
+            } elseif ($model->getName() === 'ExampleClass') {
+                self::assertSame(3, $model->getUsedClasses()->count());
+            } else {
+                self::assertSame(0, $model->getUsedClasses()->count());
+            }
+        }
+    }
 
-        self::assertIsArray($node->getClass()->getExtends());
-        self::assertCount(1, $node->getClass()->getExtends());
-        $extends = $node->getClass()->getExtends()[0];
-        self::assertInstanceOf(NamespaceNode::class, $extends);
-        self::assertSame('PhpPlantUML\PlantUML\ns\AnotherExampleClass', $extends->toString());
+    public function testInterfaceModel(): void
+    {
+        foreach ($this->plantUML->getModels() as $model) {
+            if ($model->getName() !== 'ExampleInterface') {
+                continue;
+            }
 
-        self::assertIsArray($node->getClass()->getImplements());
-        self::assertCount(0, $node->getClass()->getImplements());
+            self::assertSame('ExampleInterface', $model->getName());
+            self::assertSame('PhpPlantUML\PlantUML\ExampleInterface', $model->getFqn());
+            self::assertSame('PhpPlantUML_PlantUML_ExampleInterface', $model->getSafeFqn());
+            self::assertSame('PhpPlantUML\PlantUML', $model->getNamespace()->toString());
+            self::assertSame('PhpPlantUML_PlantUML', $model->getNamespace()->toSafeString());
+            self::assertSame(0, $model->getUsedClasses()->count());
+            self::assertSame(1, $model->getDeclare()->count());
+            self::assertSame(1, $model->getDeclare()->find('strict_types')->getValue());
+            self::assertSame(1, $model->getMethods()->count());
+            self::assertSame('publicMethod', $model->getMethods()->first()->getName());
+            self::assertSame(2, $model->getMethods()->first()->getParameters()->count());
+            self::assertSame('string', $model->getMethods()->first()->getParameters()->first()->getType());
+        }
+    }
 
-        self::assertIsArray($node->getClass()->getConstants());
-        self::assertCount(0, $node->getClass()->getConstants());
+    public function testTraitModel(): void
+    {
+        foreach ($this->plantUML->getModels() as $model) {
+            if ($model->getName() !== 'ExampleTrait') {
+                continue;
+            }
 
-        self::assertIsArray($node->getClass()->getProperties());
-        self::assertCount(0, $node->getClass()->getProperties());
+            self::assertSame('ExampleTrait', $model->getName());
+            self::assertSame('PhpPlantUML\PlantUML\ExampleTrait', $model->getFqn());
+            self::assertSame('PhpPlantUML_PlantUML_ExampleTrait', $model->getSafeFqn());
+            self::assertSame('PhpPlantUML\PlantUML', $model->getNamespace()->toString());
+            self::assertSame('PhpPlantUML_PlantUML', $model->getNamespace()->toSafeString());
+            self::assertSame(0, $model->getUsedClasses()->count());
+            self::assertSame(1, $model->getDeclare()->count());
+            self::assertSame(1, $model->getDeclare()->find('strict_types')->getValue());
+            self::assertSame(1, $model->getMethods()->count());
+            self::assertSame('traitMethod', $model->getMethods()->first()->getName());
+            self::assertSame(0, $model->getMethods()->first()->getParameters()->count());
+            self::assertSame(0, $model->getProperties()->count());
+        }
+    }
+
+    public function testClassModel(): void
+    {
+        foreach ($this->plantUML->getModels() as $model) {
+            if ($model->getName() !== 'ExampleClass') {
+                continue;
+            }
+
+            self::assertSame('ExampleClass', $model->getName());
+            self::assertSame('PhpPlantUML\PlantUML\ExampleClass', $model->getFqn());
+            self::assertSame('PhpPlantUML_PlantUML_ExampleClass', $model->getSafeFqn());
+            self::assertSame('PhpPlantUML\PlantUML', $model->getNamespace()->toString());
+            self::assertSame('PhpPlantUML_PlantUML', $model->getNamespace()->toSafeString());
+            self::assertSame(3, $model->getUsedClasses()->count());
+            self::assertSame(1, $model->getDeclare()->count());
+            self::assertSame(1, $model->getDeclare()->find('strict_types')->getValue());
+            self::assertSame(5, $model->getMethods()->count());
+            self::assertSame('publicMethod', $model->getMethods()->first()->getName());
+            self::assertSame(2, $model->getMethods()->first()->getParameters()->count());
+            self::assertSame(4, $model->getProperties()->count());
+            self::assertSame(3, $model->getConstants()->count());
+        }
     }
 }

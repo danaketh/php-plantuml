@@ -3,25 +3,27 @@
 /**
  * Diagram
  *
- * @category  PhpPlantUML\PlantUML
- * @package   PhpPlantUML\PlantUML
- * @author    Daniel Tlach <daniel@tlach.cz>
+ * @category PhpPlantUML\PlantUML
+ * @package PhpPlantUML\PlantUML
+ * @author Daniel Tlach <daniel@tlach.cz>
  * @copyright danaketh, s.r.o.
- * @license   https://choosealicense.com/licenses/mit/ MIT License
- * @link      https://github.com/danaketh/php-plantuml
+ * @license https://choosealicense.com/licenses/mit/ MIT License
+ * @link https://github.com/danaketh/php-plantuml
  */
 
 declare(strict_types=1);
 
-
 namespace PhpPlantUML\PlantUML;
 
+use PhpPlantUML\PlantUML\Model\Model;
 
-use PhpPlantUML\PlantUML\Node\Node;
-
-class Diagram
+final class Diagram
 {
-    public function __construct(protected Node $node)
+    protected string $start = '@startuml';
+
+    protected string $end = '@enduml';
+
+    public function __construct(protected Model $node)
     {
     }
 

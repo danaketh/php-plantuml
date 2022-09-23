@@ -20,12 +20,11 @@ class DiagramTest extends TestCase
 
     public function setUp(): void
     {
-        $this->plantUML = new PlantUML(__DIR__.'/example/ExampleClass.php');
-        file_put_contents('class.ast', $this->plantUML->getAst());
+        $this->plantUML = new PlantUML(__DIR__.'/example');
     }
 
-    public function testClass(): void
+    public function testX(): void
     {
-
+        self::assertTrue(true);
     }
 }

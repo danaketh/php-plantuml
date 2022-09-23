@@ -17,7 +17,10 @@ declare(strict_types=1);
 namespace PhpPlantUML\PlantUML;
 
 
-interface ExampleInterface
+trait ExampleTrait
 {
-    public function publicMethod(string $param1, int $param2): string|null;
+    public function traitMethod(): string
+    {
+        return 'traitMethod';
+    }
 }
